@@ -16,7 +16,7 @@ const port = config.port;
 //"dev": "next dev --turbopack",
 // MongoDB connection
 mongoose
-  .connect(config.mongodbUri)
+  .connect(process.env.MONGODB_URI as string)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => {
     console.error("MongoDB connection error:", err);
