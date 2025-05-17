@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import axios, { AxiosError } from "axios";
-import { PacmanLoader } from "react-spinners";
 import { useSession } from "next-auth/react";
 import { Button, TextField } from "@mui/material";
 import SpinnerModal from "./SpinnerModal";

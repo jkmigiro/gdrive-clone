@@ -13,7 +13,6 @@ import FilePreview from "./FilePreview";
 import File from "@/models/File";
 import SpinnerModal from "./SpinnerModal";
 import Toast from "./Toast";
-import { PacmanLoader } from "react-spinners";
 
 interface FileListProps {
   files: File[];

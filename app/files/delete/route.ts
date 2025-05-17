@@ -4,7 +4,6 @@ import { connectToDatabase, FileModel } from "@/utils/db";
 import { deleteFile } from "@/utils/store";
 import { NextResponse } from "next/server";
 import File from "@/models/File";
-import { DefaultUser } from "next-auth";
 
 interface DeleteRequest {
   id: string;
