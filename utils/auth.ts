@@ -30,8 +30,8 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: "/auth/signin",
-    newUser: "/auth/signup",
+    signIn: "/api/auth/signin",
+    newUser: "/api/auth/signup",
   },
   session: {
     strategy: "jwt",

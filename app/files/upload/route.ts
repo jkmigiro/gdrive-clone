@@ -22,11 +22,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   await connectToDatabase();
   const fileName = `${Date.now()}_${file.name}`;
   let filePath;
-  console.log("Current user uploading is: ", currentUser);
   const user = await UserModel.findOne({ email: currentUser.email });
   if (currentUser?.email) {
-    //await connectToDatabase();
-    console.log("Current user uploading from db is: ", user);
     if (user && user._id) {
       filePath = await saveFile(
         Buffer.from(await file.arrayBuffer()),
@@ -35,7 +32,6 @@ export async function POST(req: Request): Promise<NextResponse> {
       );
     }
   } else {
-    console.log("Unauthorized >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
     redirect("/api/auth/signin");
     return NextResponse.json(
       { error: "You are unauthorized to do this transaction" },

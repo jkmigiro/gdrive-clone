@@ -1,62 +1,103 @@
 "use client";
-
 import React, { useState } from "react";
-import axios from "axios";
-import { useRouter } from "next/navigation";
-export default function FolderCreate() {
-  const [name, setName] = useState<string>("");
-  const router = useRouter();
+import axios, { AxiosError } from "axios";
+import { PacmanLoader } from "react-spinners";
+import { useSession } from "next-auth/react";
+import { Button, TextField } from "@mui/material";
+import SpinnerModal from "./SpinnerModal";
+import Toast from "./Toast";
+import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
+
+export default function FolderCreate({
+  fetchFilesAction,
+}: {
+  fetchFilesAction: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [isSpinnerOpen, setIsSpinnerOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const { status } = useSession();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
-    let response;
-    try {
-      response = await axios.post("/files/folders", {
-        name: name,
-      });
-
-      if (response && response.status === 200) {
-        alert("Folder created");
-        setName("");
-        router.push("/dashboard");
-      } else {
-        console.log("Error when creating folder: ", response);
-        alert("Folder creation failed");
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.log("Error occurred when creating a folder: ", err);
+    if (!name.trim()) {
+      setMessage("Folder name is required");
+      setIsToastOpen(true);
+      return;
     }
 
-    // const res = await fetch("/files/folders", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ name }),
-    // });
-
-    // if (res.ok) {
-    //   console.log("Response after creating folder: ", res);
-    //   alert("Folder created");
-    //   setName("");
-    // } else {
-    //   console.log("Response after creating folder: ", res);
-    //   alert("Folder creation failed");
-    // }
+    setIsSpinnerOpen(true);
+    try {
+      const response = await axios.post("/files/folders", { name });
+      if (response.status === 200) {
+        setName("");
+        setMessage("Folder created successfully");
+        setIsToastOpen(true);
+        fetchFilesAction();
+      } else {
+        console.log("Response: ", response);
+        setMessage("Unexpected response");
+        setIsToastOpen(true);
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ error?: string }>;
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to create folder";
+      setMessage(errorMessage);
+      setIsToastOpen(true);
+    } finally {
+      setIsSpinnerOpen(false);
+      closeToast();
+    }
   };
 
+  const closeToast = () => {
+    setTimeout(() => {
+      setIsToastOpen(false);
+    }, 3000);
+  };
+  if (status === "loading" || status === "unauthenticated") {
+    return null;
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-      <input
-        type="text"
+    <form
+      onSubmit={handleSubmit}
+      className="flex items-center space-x-2"
+      aria-label="Create folder form"
+    >
+      <TextField
+        id="folder-name"
+        label="Folder Name"
+        variant="outlined"
+        size="medium"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Folder name"
-        className="p-2 border rounded"
+        required
+        sx={{ mr: 2 }}
       />
-      <button type="submit" className="p-2 bg-green-500 text-white rounded">
+      <Button
+        type="submit"
+        color="primary"
+        variant="contained"
+        startIcon={<CreateNewFolderIcon />}
+        disabled={isSpinnerOpen}
+        sx={{
+          px: 3,
+          py: 1.5,
+          borderRadius: 2,
+          boxShadow: 3,
+          textTransform: "none",
+          fontWeight: "bold",
+        }}
+      >
         Create Folder
-      </button>
+      </Button>
+      <Toast open={isToastOpen} message={message} />
+      <SpinnerModal open={isSpinnerOpen} message="Creating folder..." />
     </form>
   );
 }

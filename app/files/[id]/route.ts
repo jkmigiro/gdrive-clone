@@ -39,8 +39,8 @@ export async function GET(
         "Content-Disposition": `inline; filename="${file.name}"`,
       },
     });
-  } catch (error) {
-    console.error("Error reading file:", error);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
     return NextResponse.json({ error: "Failed to read file" }, { status: 500 });
   }
 }

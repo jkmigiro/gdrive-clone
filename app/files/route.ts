@@ -7,7 +7,6 @@ import { UserModel } from "@/utils/db.ts";
 import { DefaultUser } from "next-auth";
 
 export async function GET(): Promise<NextResponse> {
-  console.log("GET /api/files received");
   const session = await getServerSession(authOptions);
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

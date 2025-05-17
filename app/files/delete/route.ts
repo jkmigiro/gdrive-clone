@@ -19,10 +19,7 @@ export async function DELETE(req: Request): Promise<NextResponse> {
   await connectToDatabase();
   const json = await req.json();
   const { id }: DeleteRequest = json;
-  console.log("JSON is: ", json);
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
-  const currentUser = session?.user as DefaultUser;
-  console.log("Deleting for: ", currentUser.email, " ID: ", id);
 
   const file: File | null = await FileModel.findOne({
     _id: id,

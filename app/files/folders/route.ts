@@ -10,9 +10,6 @@ interface FolderRequest {
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function POST(req: any) {
-  console.log(
-    "Creating >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.",
-  );
   const session = await getServerSession(authOptions);
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,6 +21,19 @@ export async function POST(req: any) {
 
   await connectToDatabase();
   const user = await UserModel.findOne({ email: currentUser.email });
+  const existingFolder = await FileModel.findOne({
+    name,
+    type: "folder",
+    userId: user?._id,
+    parentId: parentId || null,
+  });
+
+  if (existingFolder) {
+    return NextResponse.json(
+      { error: "Folder with this name already exists." },
+      { status: 409 },
+    );
+  }
   const folder = new FileModel({
     name,
     type: "folder",

@@ -1,61 +1,155 @@
-'use client';
+"use client";
 
-import { signIn } from 'next-auth/react';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Link from "next/link";
 
 export default function SignIn() {
-    const [email, setEmail] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
-    const [error, setError] = useState<string>('');
-    const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { status } = useSession();
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const result = await signIn('credentials', {
-            redirect: false,
-            email,
-            password,
-        });
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/api/auth/signin");
+    } else if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
 
-        if (result?.error) {
-            setError(result.error);
-        } else {
-            router.push('/dashboard');
-        }
-    };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+      if (result?.error) {
+        setError(
+          result.error === "CredentialsSignin"
+            ? "Invalid email or password"
+            : result.error,
+        );
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  if (status === "loading") {
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <div className="p-6 bg-white rounded shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-4">Sign In</h2>
-                {error && <p className="text-red-500 mb-4">{error}</p>}
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium">Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full p-2 border rounded"
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-2 border rounded"
-                            required
-                        />
-                    </div>
-                    <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">
-                        Sign In
-                    </button>
-                </form>
-            </div>
-        </div>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress aria-label="Loading sign-in page" />
+      </Box>
     );
+  }
+
+  return (
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      minHeight="100vh"
+      sx={{ bgcolor: "grey.100", p: { xs: 2, sm: 3 } }}
+    >
+      <Box
+        sx={{
+          p: { xs: 3, sm: 4 },
+          bgcolor: "white",
+          borderRadius: 2,
+          boxShadow: 3,
+          width: "100%",
+          maxWidth: 400,
+        }}
+        role="form"
+        aria-label="Sign in form"
+      >
+        <Typography variant="h5" fontWeight="bold" mb={3}>
+          Sign In
+        </Typography>
+        {error && (
+          <Typography color="error" mb={2} aria-live="polite">
+            {error}
+          </Typography>
+        )}
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            slotProps={{
+              inputLabel: { htmlFor: "email" },
+              input: { id: "email" },
+            }}
+            aria-required="true"
+          />
+          <TextField
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            slotProps={{
+              inputLabel: { htmlFor: "password" },
+              input: { id: "password" },
+            }}
+            aria-required="true"
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            disabled={isLoading}
+            sx={{ mt: 2, py: 1.5, textTransform: "none" }}
+            aria-label="Sign in"
+          >
+            {isLoading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Sign In"
+            )}
+          </Button>
+        </form>
+        <Typography variant="body2" mt={2} textAlign="center">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/api/auth/signup"
+            className="text-blue-600 hover:underline"
+          >
+            Sign Up
+          </Link>
+        </Typography>
+      </Box>
+    </Box>
+  );
 }
